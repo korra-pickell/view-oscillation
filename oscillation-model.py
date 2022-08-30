@@ -1,11 +1,11 @@
 
 import tensorflow as tf
-from keras.layers import Input, Conv2D, Dropout, Conv2DTranspose, BatchNormalization, LeakyReLU, ReLU
+from keras.layers import Input, Conv2D, Dropout, Conv2DTranspose, BatchNormalization, LeakyReLU, ReLU, Flatten, Concatenate
 from keras.activations import relu, leaky_relu
 
 TARGET_SIZE = (512,512,3)
 
-def downsample(filters, size, apply_batchnorm=False):
+def downsample(filters, size, apply_batchnorm=True):
     initializer = tf.random_normal_initializer(0., 0.02)
     x = Conv2D(filters,
                 size,
@@ -38,9 +38,30 @@ def upsample(filters, size, apply_dropout=False):
 def get_model_branch0():
     input0 = Input(shape=(512,512,3,))
 
+    '''512'''
+    x = downsample(64,4,apply_batchnorm=False)(input0)
+    '''256'''
+    x = downsample(64,4)
+    '''128'''
+    x = downsample(64,4)
+    '''64'''
+    x = downsample(64,4)
+    '''32'''
+    x = downsample(64,4)
+    '''16'''
+    x = downsample(64,4)
+    '''8'''
+    x = downsample(64,4)
+    '''4'''
+    x = Flatten()(x)
+
+    return x
+
 
 def get_model_branch1():
-    pass
+    input1 = Input(shape=(1,))
+
+    return input1
 
 def get_model_full():
     pass
