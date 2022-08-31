@@ -1,9 +1,22 @@
-
+import numpy as np
 import tensorflow as tf
 from keras.layers import Input, Dense, Conv2D, Reshape, Dropout, Conv2DTranspose, BatchNormalization, LeakyReLU, ReLU, Flatten, Concatenate
 from keras.activations import relu, leaky_relu
 
 TARGET_SIZE = (512,512,3)
+
+data = r'E:\DATA\View Oscillation 2\128.npz'
+
+
+def generator(path):
+    with np.load(path) as data:
+        x0,x1,y0 = data['x0'],data['x1'],data['y0']
+        for x_0,x_1,y_0 in zip(x0,x1,y0):
+            yield {"input_1":x_0, "input_2": x_1}, y_0
+
+
+
+
 
 def downsample(filters, size, apply_batchnorm=True):
     initializer = tf.random_normal_initializer(0., 0.02)
