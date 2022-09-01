@@ -24,7 +24,7 @@ def to_npz():
             x0 = d_imgs[0]
             x1 = float(i)/46
             y0 = img
-            np.savez(os.path.join(data2,str(example_index)+'.npz'),
+            np.savez(os.path.join(data2,str(example_index).zfill(5)+'.npz'),
                 x0 = np.array(x0), 
                 x1 = np.array(x1),
                 y0 = np.array(y0))

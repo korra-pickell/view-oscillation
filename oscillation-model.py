@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 from keras.layers import Input, Dense, Conv2D, Reshape, Dropout, Conv2DTranspose, BatchNormalization, LeakyReLU, ReLU, Flatten, Concatenate
@@ -15,8 +16,12 @@ gen_params = {'dim1': (128,128,3),
             'n_channels': 3,
             'shuffle': True}
 
-data_path = r'E:\DATA\View Oscillation 2\128.npz'
+data_path = r'E:\DATA\View Oscillation 2'
 
+def get_data_ids():
+    all_ids = os.listdir(data_path)
+    val_point = int(len(all_ids)*0.8)
+    return all_ids[:val_point], all_ids[val_point:]
 
 def generator(path):
     with np.load(path) as data:
@@ -35,12 +40,12 @@ def generator(path):
 
 class DataGenerator(tf.keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_IDs, labels, batch_size=32, dim1=(128,128,3), dim2=(1), n_channels=3, shuffle=True):
+    def __init__(self, list_IDs, dpath ,batch_size=32, dim1=(128,128,3), dim2=(1), n_channels=3, shuffle=True):
         'Initialization'
+        self.dpath = dpath
         self.dim1 = dim1
         self.dim2 = dim2
         self.batch_size = batch_size
-        self.labels = labels
         self.list_IDs = list_IDs
         self.n_channels = n_channels
         self.shuffle = shuffle
@@ -72,18 +77,17 @@ class DataGenerator(tf.keras.utils.Sequence):
     def __data_generation(self, list_IDs_temp):
         'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
         # Initialization
-        X = np.empty((self.batch_size, *self.dim, self.n_channels))
-        y = np.empty((self.batch_size), dtype=int)
+        X0 = np.empty((self.batch_size, *self.dim1, self.n_channels))
+        X1 = np.empty((self.batch_size, *self.dim2))
+        y = np.empty((self.batch_size, *self.dim1, self.n_channels))
 
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
-            X[i,] = np.load('data/' + ID + '.npy')
+            data = np.load(os.path.join(self.dpath,ID))
+            x0,x1,y0 = data['x0'],data['x1'],data['y0']
 
-            # Store class
-            y[i] = self.labels[ID]
-
-        return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
+        return {'input_1':X0, 'input_2':X1}, y
 
 
 def get_dataset():
