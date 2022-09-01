@@ -6,7 +6,7 @@ data = r'E:\DATA\View Oscillation'
 data2 = r'E:\DATA\View Oscillation 2'
 target_size = (128,128)
 
-num_unique_scenes = 100
+num_unique_scenes = 1000
 
 def get_img(path):
     img = cv2.resize(cv2.imread(path),target_size)
