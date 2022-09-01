@@ -16,8 +16,8 @@ def generator(path):
     with np.load(path) as data:
         x0,x1,y0 = data['x0'],data['x1'],data['y0']
         x0 = np.expand_dims(x0,axis=0)
-        #x1 = np.expand_dims(x1,axis=0)
-        y0 = np.expand_dims(y0,axis=0)
+        x1 = np.expand_dims(x1,axis=0)
+        #y0 = np.expand_dims(y0,axis=0)
         #print(len(x0),len(x1),len(y0))
         #s=input('...')
         for x_0,x_1,y_0 in zip(x0,x1,y0):
@@ -25,6 +25,60 @@ def generator(path):
             #print(x_1)
             #s=input('...')
             yield {'input_1':x_0, 'input_2':x_1}, y_0
+
+
+class DataGenerator(tf.keras.utils.Sequence):
+    'Generates data for Keras'
+    def __init__(self, list_IDs, labels, batch_size=32, dim=(32,32,32), n_channels=1,
+                 n_classes=10, shuffle=True):
+        'Initialization'
+        self.dim = dim
+        self.batch_size = batch_size
+        self.labels = labels
+        self.list_IDs = list_IDs
+        self.n_channels = n_channels
+        self.n_classes = n_classes
+        self.shuffle = shuffle
+        self.on_epoch_end()
+
+    def __len__(self):
+        'Denotes the number of batches per epoch'
+        return int(np.floor(len(self.list_IDs) / self.batch_size))
+
+    def __getitem__(self, index):
+        'Generate one batch of data'
+        # Generate indexes of the batch
+        indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
+
+        # Find list of IDs
+        list_IDs_temp = [self.list_IDs[k] for k in indexes]
+
+        # Generate data
+        X, y = self.__data_generation(list_IDs_temp)
+
+        return X, y
+
+    def on_epoch_end(self):
+        'Updates indexes after each epoch'
+        self.indexes = np.arange(len(self.list_IDs))
+        if self.shuffle == True:
+            np.random.shuffle(self.indexes)
+
+    def __data_generation(self, list_IDs_temp):
+        'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
+        # Initialization
+        X = np.empty((self.batch_size, *self.dim, self.n_channels))
+        y = np.empty((self.batch_size), dtype=int)
+
+        # Generate data
+        for i, ID in enumerate(list_IDs_temp):
+            # Store sample
+            X[i,] = np.load('data/' + ID + '.npy')
+
+            # Store class
+            y[i] = self.labels[ID]
+
+        return X, keras.utils.to_categorical(y, num_classes=self.n_classes)
 
 
 def get_dataset():
@@ -100,7 +154,7 @@ def get_branch0():
     return model
 
 def get_branch1():
-    input1 = Input(shape=(None,1))
+    input1 = Input(shape=(1,))
     x = Dense(1,activation='sigmoid')(input1)
     model = tf.keras.models.Model(input1,x)
     return model
