@@ -40,7 +40,7 @@ def generator(path):
 
 class DataGenerator(tf.keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_IDs, dpath ,batch_size=32, dim1=(128,128,3), dim2=(1), n_channels=3, shuffle=True):
+    def __init__(self, list_IDs, dpath ,batch_size=32, dim1=(128,128), dim2=(1,), n_channels=3, shuffle=True):
         'Initialization'
         self.dpath = dpath
         self.dim1 = dim1
@@ -86,6 +86,7 @@ class DataGenerator(tf.keras.utils.Sequence):
             # Store sample
             data = np.load(os.path.join(self.dpath,ID))
             x0,x1,y0 = data['x0'],data['x1'],data['y0']
+            X0[i,], X1[i,], y[i,] = x0, x1, y0
 
         return {'input_1':X0, 'input_2':X1}, y
 
@@ -218,11 +219,19 @@ def save_graph(model):
 
 
 if __name__ == '__main__':
+
+    train_ids, val_ids = get_data_ids()
+
+    train_gen = DataGenerator(train_ids, data_path,batch_size=32)
+    val_gen = DataGenerator(val_ids, data_path,batch_size=32)
+
+    
+
     
     model = get_model_full()
     save_graph(model)
     model.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(), metrics=['mean_squared_error'])
     #train_dataset,test_dataset = get_dataset()
     #model.fit(train_dataset, validation_data = test_dataset, epochs=EPOCHS)
-    model.fit(generator(data_path),epochs=4)
+    model.fit(train_gen,validation_data=val_gen,epochs=4)
 
