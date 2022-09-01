@@ -9,6 +9,12 @@ SHUFFLE_BUFFER = 500
 BATCH_SIZE = 2
 EPOCHS = 3
 
+gen_params = {'dim1': (128,128,3),
+            'dim2': (1),
+            'batch_size': 64,
+            'n_channels': 3,
+            'shuffle': True}
+
 data_path = r'E:\DATA\View Oscillation 2\128.npz'
 
 
@@ -29,15 +35,14 @@ def generator(path):
 
 class DataGenerator(tf.keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_IDs, labels, batch_size=32, dim=(32,32,32), n_channels=1,
-                 n_classes=10, shuffle=True):
+    def __init__(self, list_IDs, labels, batch_size=32, dim1=(128,128,3), dim2=(1), n_channels=3, shuffle=True):
         'Initialization'
-        self.dim = dim
+        self.dim1 = dim1
+        self.dim2 = dim2
         self.batch_size = batch_size
         self.labels = labels
         self.list_IDs = list_IDs
         self.n_channels = n_channels
-        self.n_classes = n_classes
         self.shuffle = shuffle
         self.on_epoch_end()
 
