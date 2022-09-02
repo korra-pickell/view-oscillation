@@ -5,7 +5,7 @@ from progress.bar import Bar
 
 data = r'E:\DATA\View Oscillation'
 
-target_size = (512,512)
+target_size = (128,128)
 num_examples = 5
 
 def get_img(path):

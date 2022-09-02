@@ -8,7 +8,7 @@ from keras.activations import relu, leaky_relu
 TARGET_SHAPE = (128,128,3,)
 SHUFFLE_BUFFER = 500
 BATCH_SIZE = 2
-EPOCHS = 3
+EPOCHS = 5
 MAX_SAMPLES = 1000
 
 gen_params = {'dim1': (128,128,3),
@@ -235,4 +235,6 @@ if __name__ == '__main__':
     #train_dataset,test_dataset = get_dataset()
     #model.fit(train_dataset, validation_data = test_dataset, epochs=EPOCHS)
     model.fit(train_gen,validation_data=val_gen,epochs=4)
+
+    model.save(r'E:\DATA\View Oscillation 2\models\oscill-128.h5')
 
