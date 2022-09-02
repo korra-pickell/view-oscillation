@@ -1,4 +1,4 @@
-import os
+import os, cv2
 import numpy as np
 import tensorflow as tf
 from keras.layers import Input, Dense, Conv2D, Reshape, Dropout, Conv2DTranspose, BatchNormalization, LeakyReLU, ReLU, Flatten, Concatenate
@@ -9,7 +9,7 @@ TARGET_SHAPE = (128,128,3,)
 SHUFFLE_BUFFER = 500
 BATCH_SIZE = 2
 EPOCHS = 5
-MAX_SAMPLES = 1000
+MAX_SAMPLES = 100
 
 gen_params = {'dim1': (128,128,3),
             'dim2': (1),
@@ -87,6 +87,8 @@ class DataGenerator(tf.keras.utils.Sequence):
             # Store sample
             data = np.load(os.path.join(self.dpath,ID))
             x0,x1,y0 = data['x0'],data['x1'],data['y0']
+            x0 = cv2.resize(x0,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
+            y0 = cv2.resize(x0,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
             X0[i,], X1[i,], y[i,] = x0, x1, y0
 
         return {'input_1':X0, 'input_2':X1}, y
@@ -236,5 +238,5 @@ if __name__ == '__main__':
     #model.fit(train_dataset, validation_data = test_dataset, epochs=EPOCHS)
     model.fit(train_gen,validation_data=val_gen,epochs=4)
 
-    #model.save(r'E:\DATA\View Oscillation 2\models\oscill-128.h5')
+    model.save(r'E:\DATA\View Oscillation 2\models\oscill-128.h5')
 
