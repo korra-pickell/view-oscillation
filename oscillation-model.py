@@ -9,17 +9,18 @@ TARGET_SHAPE = (128,128,3,)
 SHUFFLE_BUFFER = 500
 BATCH_SIZE = 2
 EPOCHS = 3
+MAX_SAMPLES = 5000
 
 gen_params = {'dim1': (128,128,3),
             'dim2': (1),
-            'batch_size': 64,
+            'batch_size': 256,
             'n_channels': 3,
             'shuffle': True}
 
 data_path = r'E:\DATA\View Oscillation 2'
 
 def get_data_ids():
-    all_ids = os.listdir(data_path)
+    all_ids = os.listdir(data_path)[:MAX_SAMPLES]
     val_point = int(len(all_ids)*0.8)
     return all_ids[:val_point], all_ids[val_point:]
 
