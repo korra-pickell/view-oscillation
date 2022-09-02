@@ -9,7 +9,7 @@ TARGET_SHAPE = (128,128,3,)
 SHUFFLE_BUFFER = 500
 BATCH_SIZE = 2
 EPOCHS = 3
-MAX_SAMPLES = 5000
+MAX_SAMPLES = 1000
 
 gen_params = {'dim1': (128,128,3),
             'dim2': (1),
@@ -144,12 +144,12 @@ def upsample(filters, size, apply_dropout=False):
 def get_branch0():
     input0 = Input(shape=(128,128,3,))
 
-    down_stack = [downsample(32,4,apply_batchnorm=False),
-                    downsample(32,4),
-                    downsample(32,4),
-                    downsample(32,4),
-                    downsample(32,4),
-                    downsample(32,4)]
+    down_stack = [downsample(64,4,apply_batchnorm=False),
+                    downsample(128,4),
+                    downsample(256,4),
+                    downsample(512,4),
+                    downsample(512,4),
+                    downsample(512,4)]
                     #downsample(512,4),
                     #downsample(512,4)]
 
@@ -181,11 +181,11 @@ def get_model_full():
     x = Reshape((2,2,512,))(x)
     
     
-    up_stack = [upsample(32,4, apply_dropout=True),
-                    upsample(32,4, apply_dropout=True),
-                    upsample(32,4, apply_dropout=True),
-                    upsample(32,4),
-                    upsample(32,4)]
+    up_stack = [upsample(512,4, apply_dropout=True),
+                    upsample(512,4, apply_dropout=True),
+                    upsample(256,4, apply_dropout=True),
+                    upsample(128,4),
+                    upsample(64,4)]
                     #upsample(512,4),
                     #upsample(512,4)]
     
