@@ -14,8 +14,12 @@ def get_img(path):
 
 
 def get_demo_imgs():
-    demo_imgs = np.zeros((num_examples,target_size[0],target_size[1],3))
-    for d in range(0,46):
-        dpaths = os.listdir(os.path.join(data,str(d)))
-        for p in dpaths[:num_examples]:
-            d
+    demo_imgs = np.zeros((num_examples,46,target_size[0],target_size[1],3))
+    ex_num = 1
+    for ex in range(num_examples):
+        for d in range(0,46):
+            demo_imgs[ex,d] = get_img(os.path.join(data,str(d),str(ex_num).zfill(4)+'.jpg'))
+
+
+
+get_demo_imgs()
