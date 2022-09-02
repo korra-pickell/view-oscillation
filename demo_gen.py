@@ -5,6 +5,7 @@ from progress.bar import Bar
 
 data = r'E:\DATA\View Oscillation'
 models = r'E:\DATA\View Oscillation 2\models'
+img_save_dir = r'E:\DATA\View Oscillation 2\Demo'
 
 target_size = (128,128)
 num_examples = 5
@@ -26,10 +27,22 @@ def get_demo_imgs():
 def get_model():
     model_name = os.listdir(models)[0]
     model_path = os.path.join(models,model_name)
-    print('----  LOADING MODEL :  {}  ----'.format(model_name))
+    #print('----  LOADING MODEL :  {}  ----'.format(model_name))
     return tf.keras.models.load_model(model_path)
+
+
+def save_demo(img, index, pred=True):
+    img = img.numpy()
+    img = (img*255).astype(int)
+    if pred==True:
+        cv2.imwrite(os.path.join(img_save_dir,'pred',str(index)+'.jpg'),img)
+    else:
+        cv2.imwrite(os.path.join(img_save_dir,'true',str(index)+'.jpg'),img)
 
 
 if __name__ == '__main__':
     model = get_model()
     demo_imgs = get_demo_imgs()
+
+    img_pred0 = model([[np.expand_dims(demo_imgs[0][0],axis=0),np.expand_dims(np.array(0.5),axis=0)]])[0]
+    save_demo(img_pred0,0,pred=True)
