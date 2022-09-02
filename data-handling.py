@@ -3,8 +3,8 @@ import numpy as np
 from progress.bar import Bar
 
 data = r'E:\DATA\View Oscillation'
-data2 = r'E:\DATA\View Oscillation 2'
-target_size = (128,128)
+data2 = r'E:\DATA\View Oscillation 2\NPZ'
+target_size = (512,512)
 
 num_unique_scenes = 1000
 
@@ -15,8 +15,8 @@ def get_img(path):
 
 def to_npz():
     bar = Bar(' PROCESSING ', max = num_unique_scenes, suffix='%(percent)d%%')
-    example_index = 0
-    for n in range(1,num_unique_scenes):
+    example_index = 5
+    for n in range(6,num_unique_scenes):
         d_imgs = []
         for d in range(0,46):
             d_imgs.append(get_img(os.path.join(data,str(d),str(n).zfill(4)+'.jpg')))
