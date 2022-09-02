@@ -4,6 +4,7 @@ import tensorflow as tf
 from progress.bar import Bar
 
 data = r'E:\DATA\View Oscillation'
+models = r'E:\DATA\View Oscillation 2\models'
 
 target_size = (128,128)
 num_examples = 5
@@ -19,7 +20,16 @@ def get_demo_imgs():
     for ex in range(num_examples):
         for d in range(0,46):
             demo_imgs[ex,d] = get_img(os.path.join(data,str(d),str(ex_num).zfill(4)+'.jpg'))
+    return demo_imgs
 
 
+def get_model():
+    model_name = os.listdir(models)[0]
+    model_path = os.path.join(models,model_name)
+    print('----  LOADING MODEL :  {}  ----'.format(model_name))
+    return tf.keras.models.load_model(model_path)
 
-get_demo_imgs()
+
+if __name__ == '__main__':
+    model = get_model()
+    demo_imgs = get_demo_imgs()
