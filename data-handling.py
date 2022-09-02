@@ -3,14 +3,14 @@ import numpy as np
 from progress.bar import Bar
 
 data = r'E:\DATA\View Oscillation'
-data2 = r'E:\DATA\View Oscillation 2\NPZ'
-target_size = (512,512)
+data2 = r'E:\DATA\View Oscillation 2\NPZ-F'
+target_size = (128,128)
 
-num_unique_scenes = 1000
+num_unique_scenes = 100
 
 def get_img(path):
     img = cv2.resize(cv2.imread(path),target_size)
-    return np.array(img)/255
+    return (np.array(img)/127.5)-1
 
 
 def to_npz():
@@ -22,7 +22,7 @@ def to_npz():
             d_imgs.append(get_img(os.path.join(data,str(d),str(n).zfill(4)+'.jpg')))
         for i,img in enumerate(d_imgs):
             x0 = d_imgs[0]
-            x1 = float(i)/46
+            x1 = (float(i)/23)-1
             y0 = img
             np.savez(os.path.join(data2,str(example_index).zfill(5)+'.npz'),
                 x0 = np.array(x0), 

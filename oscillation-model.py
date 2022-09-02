@@ -5,19 +5,13 @@ from keras.layers import Input, Dense, Conv2D, Reshape, Dropout, Conv2DTranspose
 from keras.activations import relu, leaky_relu
 
 
-TARGET_SHAPE = (128,128,3,)
+TARGET_SHAPE = (256,256,3,)
 SHUFFLE_BUFFER = 500
-BATCH_SIZE = 2
-EPOCHS = 5
+BATCH_SIZE = 1
+EPOCHS = 1
 MAX_SAMPLES = 100
 
-gen_params = {'dim1': (128,128,3),
-            'dim2': (1),
-            'batch_size': 256,
-            'n_channels': 3,
-            'shuffle': True}
-
-data_path = r'E:\DATA\View Oscillation 2\NPZ'
+data_path = r'E:\DATA\View Oscillation 2\NPZ-F'
 
 def get_data_ids():
     all_ids = os.listdir(data_path)[:MAX_SAMPLES]
@@ -41,7 +35,7 @@ def generator(path):
 
 class DataGenerator(tf.keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_IDs, dpath ,batch_size=32, dim1=(128,128), dim2=(1,), n_channels=3, shuffle=True):
+    def __init__(self, list_IDs, dpath ,batch_size=32, dim1=(TARGET_SHAPE[0],TARGET_SHAPE[1]), dim2=(1,), n_channels=3, shuffle=True):
         'Initialization'
         self.dpath = dpath
         self.dim1 = dim1
@@ -144,11 +138,13 @@ def upsample(filters, size, apply_dropout=False):
 
 
 def get_branch0():
-    input0 = Input(shape=(128,128,3,))
+    input0 = Input(shape=TARGET_SHAPE)
 
     down_stack = [downsample(64,4,apply_batchnorm=False),
                     downsample(128,4),
                     downsample(256,4),
+                    downsample(512,4),
+                    downsample(512,4),
                     downsample(512,4),
                     downsample(512,4),
                     downsample(512,4)]
@@ -161,7 +157,7 @@ def get_branch0():
         x = down(x)
     
     x = Flatten()(x)
-    x = Dense(2048,activation='sigmoid')(x)
+    x = Dense(512,activation='sigmoid')(x)
 
     model = tf.keras.models.Model(input0,x)
     return model
@@ -178,14 +174,24 @@ def get_model_full():
     branch0 = get_branch0()
     branch1 = get_branch1()
     combined_branches = Concatenate()([branch0.output,branch1.output])
-    x = Dense(2049,'relu')(combined_branches)
-    x = Dense(2048,'sigmoid')(x)
-    x = Reshape((2,2,512,))(x)
+    x = Dense(513,'relu')(combined_branches)
+    x = Dense(512,'sigmoid')(x)
+    x = Reshape((1,1,512,))(x)
+
+    initializer = tf.random_normal_initializer(0., 0.02)
+    last = Conv2DTranspose(3,
+                        4,
+                        strides=2,
+                        padding='same',
+                        kernel_initializer=initializer,
+                        activation='tanh')
     
     
     up_stack = [upsample(512,4, apply_dropout=True),
                     upsample(512,4, apply_dropout=True),
-                    upsample(256,4, apply_dropout=True),
+                    upsample(512,4, apply_dropout=True),
+                    upsample(512,4),
+                    upsample(256,4),
                     upsample(128,4),
                     upsample(64,4)]
                     #upsample(512,4),
@@ -195,16 +201,7 @@ def get_model_full():
     for up in up_stack:
         x = up(x)
 
-    initializer = tf.random_normal_initializer(0., 0.02)
-
-    x = Conv2DTranspose(3,
-                        4,
-                        strides=2,
-                        padding='same',
-                        kernel_initializer=initializer,
-                        activation='tanh')(x)
-
-    
+    x = last(x)
 
     return tf.keras.Model(inputs=[branch0.input,branch1.input],outputs=x)
 
@@ -225,8 +222,8 @@ if __name__ == '__main__':
 
     train_ids, val_ids = get_data_ids()
 
-    train_gen = DataGenerator(train_ids, data_path,batch_size=32)
-    val_gen = DataGenerator(val_ids, data_path,batch_size=32)
+    train_gen = DataGenerator(train_ids, data_path,batch_size=BATCH_SIZE)
+    val_gen = DataGenerator(val_ids, data_path,batch_size=BATCH_SIZE)
 
     
 
@@ -236,7 +233,7 @@ if __name__ == '__main__':
     model.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(), metrics=['mean_squared_error'])
     #train_dataset,test_dataset = get_dataset()
     #model.fit(train_dataset, validation_data = test_dataset, epochs=EPOCHS)
-    model.fit(train_gen,validation_data=val_gen,epochs=4)
+    model.fit(train_gen,validation_data=val_gen,epochs=EPOCHS)
 
-    model.save(r'E:\DATA\View Oscillation 2\models\oscill-128.h5')
+    model.save(r'E:\DATA\View Oscillation 2\models\oscill-{}.h5'.format(TARGET_SHAPE[0]))
 

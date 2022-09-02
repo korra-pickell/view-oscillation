@@ -7,12 +7,12 @@ data = r'E:\DATA\View Oscillation'
 models = r'E:\DATA\View Oscillation 2\models'
 img_save_dir = r'E:\DATA\View Oscillation 2\Demo'
 
-target_size = (128,128)
+target_size = (256,256)
 num_examples = 5
 
 def get_img(path):
     img = cv2.resize(cv2.imread(path),target_size)
-    return np.array(img)/255
+    return (np.array(img)/127.5)-1
 
 
 def get_demo_imgs():
@@ -33,7 +33,9 @@ def get_model():
 
 def save_demo(img, index, pred=True):
     img = img.numpy()
-    img = (img*255).astype(int)
+    img = ((img+1)*127.5).astype(int)
+    #print(img)
+    #s=input('..')
     if pred==True:
         cv2.imwrite(os.path.join(img_save_dir,'pred',str(index)+'.jpg'),img)
     else:
@@ -44,5 +46,6 @@ if __name__ == '__main__':
     model = get_model()
     demo_imgs = get_demo_imgs()
 
-    img_pred0 = model([[np.expand_dims(demo_imgs[0][0],axis=0),np.expand_dims(np.array(0.5),axis=0)]])[0]
+    img_pred0 = model([[np.expand_dims(demo_imgs[0][0],axis=0),np.expand_dims(np.array(0.0),axis=0)]])[0]
+    
     save_demo(img_pred0,0,pred=True)
