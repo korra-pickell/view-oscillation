@@ -17,7 +17,7 @@ gen_params = {'dim1': (128,128,3),
             'n_channels': 3,
             'shuffle': True}
 
-data_path = r'E:\DATA\View Oscillation 2'
+data_path = r'E:\DATA\View Oscillation 2\NPZ'
 
 def get_data_ids():
     all_ids = os.listdir(data_path)[:MAX_SAMPLES]
@@ -236,5 +236,5 @@ if __name__ == '__main__':
     #model.fit(train_dataset, validation_data = test_dataset, epochs=EPOCHS)
     model.fit(train_gen,validation_data=val_gen,epochs=4)
 
-    model.save(r'E:\DATA\View Oscillation 2\models\oscill-128.h5')
+    #model.save(r'E:\DATA\View Oscillation 2\models\oscill-128.h5')
 
