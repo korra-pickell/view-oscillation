@@ -173,6 +173,9 @@ def get_model_full():
 
     branch0 = get_branch0()
     branch1 = get_branch1()
+
+    print(len(branch0.layers[1:-2]))
+    s = input('...')
     combined_branches = Concatenate()([branch0.output,branch1.output])
     x = Dense(513,'relu')(combined_branches)
     x = Dense(512,'sigmoid')(x)
@@ -219,7 +222,7 @@ def save_graph(model):
 
 
 if __name__ == '__main__':
-
+    '''
     train_ids, val_ids = get_data_ids()
 
     train_gen = DataGenerator(train_ids, data_path,batch_size=BATCH_SIZE)
@@ -236,4 +239,6 @@ if __name__ == '__main__':
     model.fit(train_gen,validation_data=val_gen,epochs=EPOCHS)
 
     model.save(r'E:\DATA\View Oscillation 2\models\oscill-{}.h5'.format(TARGET_SHAPE[0]))
+    '''
+    model = get_model_full()
 
