@@ -240,5 +240,11 @@ if __name__ == '__main__':
 
     model.save(r'E:\DATA\View Oscillation 2\models\oscill-{}.h5'.format(TARGET_SHAPE[0]))
     '''
-    model = get_model_full()
+    #model = get_model_full()
+    train_ids, val_ids = get_data_ids()
+    train_gen = DataGenerator(train_ids, data_path,batch_size=1)
+    for step, (x_batch_train, y_batch_train) in enumerate(train_gen):
+        print(step, x_batch_train['input_2'])
+        s=input('...')
+
 
