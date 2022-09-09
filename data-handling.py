@@ -4,7 +4,7 @@ from progress.bar import Bar
 
 data = r'E:\DATA\View Oscillation'
 data2 = r'E:\DATA\View Oscillation 2\NPZ-F'
-target_size = (128,128)
+target_size = (512,512)
 
 num_unique_scenes = 100
 
