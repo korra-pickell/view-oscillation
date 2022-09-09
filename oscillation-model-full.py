@@ -17,14 +17,14 @@ img_save_dir = r'E:\DATA\View Oscillation 2\Demo'
 checkpoint_dir = ''
 
 NUM_EPOCHS = 5
-MAX_SAMPLES = 100
+MAX_SAMPLES = 1000
 num_demo_examples = 1
-GEN_FILTER_SIZE = 4
+GEN_FILTER_SIZE = 2
 
 BUFFER_SIZE = 3000
 BATCH_SIZE = 1
-IMG_WIDTH = 512
-IMG_HEIGHT = 512
+IMG_WIDTH = 256
+IMG_HEIGHT = 256
 
 OUTPUT_CHANNELS = 3
 
@@ -92,7 +92,7 @@ def upsample(filters, size, apply_dropout=False):
     return result
 
 def Generator():
-    inputs = tf.keras.layers.Input(shape=[IMG_WIDTH, IMG_HEIGHT, OUTPUT_CHANNELS])
+    input1 = tf.keras.layers.Input(shape=[IMG_WIDTH, IMG_HEIGHT, OUTPUT_CHANNELS])
 
     down_stack = [
         downsample(64, GEN_FILTER_SIZE, apply_batchnorm=False),    # (bs, 128, 128, 64)
@@ -100,7 +100,7 @@ def Generator():
         downsample(256, GEN_FILTER_SIZE),    # (bs, 32, 32, 256)
         downsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 512)
         downsample(512, GEN_FILTER_SIZE),    # (bs, 8, 8, 512)
-        downsample(512, GEN_FILTER_SIZE),
+        #downsample(512, GEN_FILTER_SIZE),
         downsample(512, GEN_FILTER_SIZE),    # (bs, 4, 4, 512)
         downsample(512, GEN_FILTER_SIZE),    # (bs, 2, 2, 512)
         downsample(512, GEN_FILTER_SIZE),    # (bs, 1, 1, 512)
@@ -113,7 +113,7 @@ def Generator():
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 4, 4, 1024)
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 8, 8, 1024)
         upsample(512, GEN_FILTER_SIZE),
-        upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
+        #upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
         upsample(256, GEN_FILTER_SIZE),    # (bs, 32, 32, 512)
         upsample(128, GEN_FILTER_SIZE),    # (bs, 64, 64, 256)
         upsample(64, GEN_FILTER_SIZE),    # (bs, 128, 128, 128)
@@ -126,7 +126,7 @@ def Generator():
                                                                                  kernel_initializer=initializer,
                                                                                  activation='tanh')    # (bs, 256, 256, 3)
 
-    x = inputs
+    x = input1
 
     # Downsampling through the model
     skips = []
@@ -143,7 +143,7 @@ def Generator():
 
     x = last(x)
 
-    return tf.keras.Model(inputs=inputs, outputs=x)
+    return tf.keras.Model(inputs=input1, outputs=x)
 
 generator = Generator()
 
@@ -253,9 +253,9 @@ def generate_images(model, test_input, tar, epoch):
 #log_dir + "fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 
 @tf.function
-def train_step(input_image, input_condition, target, epoch):
+def train_step(input_image, target, epoch):
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-        gen_output = generator(input_image, training=True)
+        gen_output = generator([input_image], training=True)
 
         disc_real_output = discriminator([input_image, target], training=True)
         disc_generated_output = discriminator([input_image, gen_output], training=True)
@@ -285,7 +285,7 @@ def fit(train_ds, epochs, test_ds=None):
             train_bar.next()
             #print(input_image.shape,target.shape)
             #stop = input('.......')
-            train_step(inputs['input_1'], inputs['input_2'], target, epoch)
+            train_step(inputs['input_1'], target, epoch)
         train_bar.finish()
         print()
 
@@ -293,7 +293,7 @@ def fit(train_ds, epochs, test_ds=None):
         #if (epoch + 1) % 20 == 0:
             #checkpoint.save(file_prefix=checkpoint_prefix)
         demo_images = get_demo_imgs()
-        demo_output = generator(tf.expand_dims(demo_images[0][0],axis=0),training=True)
+        demo_output = generator([tf.expand_dims(demo_images[0][0],axis=0),tf.expand_dims(np.array(0.0),axis=0)],training=True)
         save_demo(demo_output,epoch,pred=True)
         #s = input('...')
         #generate_images(generator, test_dataset_x, test_dataset_y, epoch_number)
@@ -304,8 +304,8 @@ def fit(train_ds, epochs, test_ds=None):
         print ('Time taken for epoch {} is {} sec\n'.format(epoch + 1,time.time()-start))
 
 
-def get_data_ids():
-    all_ids = os.listdir(data_path)[:MAX_SAMPLES]
+def get_data_ids(d_path):
+    all_ids = os.listdir(d_path)[:MAX_SAMPLES]
     val_point = int(len(all_ids)*0.8)
     return all_ids[:val_point], all_ids[val_point:]
 
@@ -359,13 +359,16 @@ class DataGenerator(tf.keras.utils.Sequence):
             data = np.load(os.path.join(self.dpath,ID))
             x0,x1,y0 = data['x0'],data['x1'],data['y0']
             x0 = cv2.resize(x0,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
-            y0 = cv2.resize(x0,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
+            y0 = cv2.resize(y0,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
             X0[i,], X1[i,], y[i,] = x0, x1, y0
+            #print((x0 == y0).all())
 
         return {'input_1':X0, 'input_2':X1}, y
 
 
 if __name__ == '__main__':
+
+    #pass
     train_ids, val_ids = get_data_ids()
 
     train_gen = DataGenerator(train_ids, data_path,batch_size=BATCH_SIZE)
