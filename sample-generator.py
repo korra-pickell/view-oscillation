@@ -1,11 +1,11 @@
 import time, os
 import pyautogui as pg
 
-folder = r'E:\DATA\View Oscillation'
+folder = r'E:\DATA\View-Oscillation-5k'
 
 pg.PAUSE = 0.8 
 
-for i in range(0,46):
+for i in range(23,46):
 
     # Output Menu
     pg.click(1295,505)
@@ -36,9 +36,9 @@ for i in range(0,46):
 
     # Start Render
     pg.hotkey('ctrl','f12',interval=0.25)
-    
+    s=input('..')
     time.sleep(85)
-
+    
     # Close Render Window
     pg.moveTo(1400,225,0.2)
     pg.click(1400,225)

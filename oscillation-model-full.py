@@ -17,15 +17,15 @@ model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
-NUM_EPOCHS = 1
-MAX_SAMPLES = 200
+NUM_EPOCHS = 1000
+MAX_SAMPLES = 5000
 num_demo_examples = 1
-GEN_FILTER_SIZE = 2
+GEN_FILTER_SIZE = 4
 
 BUFFER_SIZE = 500
 BATCH_SIZE = 1
-IMG_WIDTH = 512
-IMG_HEIGHT = 512
+IMG_WIDTH = 256
+IMG_HEIGHT = 256
 
 OUTPUT_CHANNELS = 3
 
@@ -100,7 +100,7 @@ def Generator():
         downsample(128, GEN_FILTER_SIZE),    # 256 -> 128
         downsample(256, GEN_FILTER_SIZE),    # 128 -> 64
         downsample(512, GEN_FILTER_SIZE),    # 64 -> 32
-        downsample(512, GEN_FILTER_SIZE),    # 32 -> 16
+        #downsample(512, GEN_FILTER_SIZE),    # 32 -> 16
         downsample(512, GEN_FILTER_SIZE),    # 16 -> 8
         downsample(512, GEN_FILTER_SIZE),    # 8 -> 4
         downsample(512, GEN_FILTER_SIZE),    # 4 -> 2
@@ -109,12 +109,12 @@ def Generator():
     ]
 
     up_stack = [
-        #upsample(512, 4, apply_dropout=True),    # (bs, 2, 2, 1024)
+        upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 2, 2, 1024)
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 2, 2, 1024)
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 4, 4, 1024)
-        upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 8, 8, 1024)
+        #upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 8, 8, 1024)
         upsample(512, GEN_FILTER_SIZE),
-        upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
+        #upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
         upsample(256, GEN_FILTER_SIZE),    # (bs, 32, 32, 512)
         upsample(128, GEN_FILTER_SIZE),    # (bs, 64, 64, 256)
         upsample(64, GEN_FILTER_SIZE),    # (bs, 128, 128, 128)
@@ -238,7 +238,7 @@ def generate_images(model, test_input, tar, epoch):
 @tf.function
 def train_step(input_image, target, epoch):
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
-        gen_output = generator([input_image], training=True)
+        gen_output = generator(input_image, training=True)
 
         disc_real_output = discriminator([input_image, target], training=True)
         disc_generated_output = discriminator([input_image, gen_output], training=True)
@@ -284,7 +284,7 @@ def get_data_ids(d_path):
 
 class DataGenerator(tf.keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_IDs, dpath ,batch_size=32, dim1=(TARGET_SHAPE[0],TARGET_SHAPE[1]), dim2=(1,), n_channels=3, shuffle=True):
+    def __init__(self, list_IDs, dpath ,batch_size=1, dim1=(TARGET_SHAPE[0],TARGET_SHAPE[1]), dim2=(1,), n_channels=3, shuffle=True):
         'Initialization'
         self.dpath = dpath
         self.dim1 = dim1
@@ -340,13 +340,33 @@ class DataGenerator(tf.keras.utils.Sequence):
         return X_arr, y_arr
 
 
+def plotter(model1,model2):
+    tf.keras.utils.plot_model(
+    model1,
+    to_file=r'E:\Documents\PRGM\NEURAL\View Oscillation\model_graphics\model_gen.png',
+    show_shapes=True,
+    show_layer_names=True,
+    rankdir='TB',
+    dpi=64
+    )
+    tf.keras.utils.plot_model(
+    model2,
+    to_file=r'E:\Documents\PRGM\NEURAL\View Oscillation\model_graphics\model_dis.png',
+    show_shapes=True,
+    show_layer_names=True,
+    rankdir='TB',
+    dpi=64
+    )
+
+
 if __name__ == '__main__':
 
-    for degree in range(0,46):
+    for degree in range(23,24):
         print(f'Now Training Model {degree}')
         d_path = os.path.join(data_path,str(degree))
         
         train_ids, val_ids = get_data_ids(d_path)
+        
 
         train_gen = DataGenerator(train_ids, d_path,batch_size=BATCH_SIZE)
 
@@ -357,6 +377,8 @@ if __name__ == '__main__':
         generator = Generator()
         discriminator = Discriminator()
 
+        plotter(generator,discriminator)
+
         fit(train_ds = train_gen, epochs = NUM_EPOCHS)
-        s=input('...')
-        generator.save(os.path.join(model_save_dir,str(degree)+'.h5'))
+        #s=input('...')
+        #generator.save(os.path.join(model_save_dir,str(degree)+'.h5'))
