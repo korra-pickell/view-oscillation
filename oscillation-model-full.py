@@ -11,14 +11,14 @@ from IPython import display
 wkdir = os.path.dirname(os.path.realpath(__file__))
 
 data = r'E:\DATA\View Oscillation'
-data_path = r'E:\DATA\View Oscillation 2\NPZ-F'
+data_path = r'E:\DATA\View-Oscillation-5k'
 img_save_dir = r'E:\DATA\View Oscillation 2\Demo'
 model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
 NUM_EPOCHS = 1000
-MAX_SAMPLES = 5000
+MAX_SAMPLES = 100
 num_demo_examples = 1
 GEN_FILTER_SIZE = 4
 
@@ -276,17 +276,18 @@ def fit(train_ds, epochs, test_ds=None):
         print ('Time taken for epoch {} is {} sec\n'.format(epoch + 1,time.time()-start))
 
 
-def get_data_ids(d_path):
-    all_ids = os.listdir(d_path)[:MAX_SAMPLES]
+def get_data_ids(d_path,d):
+    all_ids = os.listdir(os.path.join(d_path,str(d)))[:MAX_SAMPLES]
     val_point = int(len(all_ids)*0.8)
     return all_ids[:val_point], all_ids[val_point:]
 
 
 class DataGenerator(tf.keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_IDs, dpath ,batch_size=1, dim1=(TARGET_SHAPE[0],TARGET_SHAPE[1]), dim2=(1,), n_channels=3, shuffle=True):
+    def __init__(self, list_IDs, dpath ,batch_size=1, dim1=(TARGET_SHAPE[0],TARGET_SHAPE[1]), dim2=(1,), n_channels=3, shuffle=True, d=0):
         'Initialization'
         self.dpath = dpath
+        self.degree = d
         self.dim1 = dim1
         self.dim2 = dim2
         self.batch_size = batch_size
@@ -318,12 +319,16 @@ class DataGenerator(tf.keras.utils.Sequence):
         if self.shuffle == True:
             np.random.shuffle(self.indexes)
 
+    def load_img(self,path):
+        img = cv2.resize(cv2.imread(path),self.dim1)
+        return (np.array(img)/127.5)-1
+
     def __data_generation(self, list_IDs_temp):
         'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
         # Initialization
         X_arr = np.empty((self.batch_size, *self.dim1, self.n_channels))
         y_arr = np.empty((self.batch_size, *self.dim1, self.n_channels))
-
+        '''
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
@@ -335,7 +340,11 @@ class DataGenerator(tf.keras.utils.Sequence):
             #print(y)
             #s = input('...')
             X_arr[i,], y_arr[i,] = x, y
-            #print((x0 == y0).all())
+            #print((x0 == y0).all())'''
+        for i, ID in enumerate(list_IDs_temp):
+            img_in = self.load_img(os.path.join(self.dpath,'0',ID))
+            img_out = self.load_img(os.path.join(self.dpath,str(self.degree),ID))
+            X_arr[i,], y_arr[i,] = img_in, img_out
 
         return X_arr, y_arr
 
@@ -363,12 +372,12 @@ if __name__ == '__main__':
 
     for degree in range(23,24):
         print(f'Now Training Model {degree}')
-        d_path = os.path.join(data_path,str(degree))
+        #d_path = os.path.join(data_path,str(degree))
         
-        train_ids, val_ids = get_data_ids(d_path)
+        train_ids, val_ids = get_data_ids(data_path,degree)
         
 
-        train_gen = DataGenerator(train_ids, d_path,batch_size=BATCH_SIZE)
+        train_gen = DataGenerator(train_ids, data_path, batch_size=BATCH_SIZE,d=degree)
 
         #print(train_gen[0])
 
