@@ -13,19 +13,18 @@ wkdir = os.path.dirname(os.path.realpath(__file__))
 data = r'E:\DATA\View Oscillation'
 data_path = r'E:\DATA\View Oscillation 2\NPZ-F'
 img_save_dir = r'E:\DATA\View Oscillation 2\Demo'
-model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
-NUM_EPOCHS = 1
-MAX_SAMPLES = 100
+NUM_EPOCHS = 5
+MAX_SAMPLES = 1000
 num_demo_examples = 1
 GEN_FILTER_SIZE = 2
 
-BUFFER_SIZE = 500
+BUFFER_SIZE = 3000
 BATCH_SIZE = 1
-IMG_WIDTH = 512
-IMG_HEIGHT = 512
+IMG_WIDTH = 256
+IMG_HEIGHT = 256
 
 OUTPUT_CHANNELS = 3
 
@@ -146,7 +145,16 @@ def Generator():
 
     return tf.keras.Model(inputs=input1, outputs=x)
 
-#generator = Generator()
+generator = Generator()
+
+tf.keras.utils.plot_model(
+    generator,
+    to_file=r'E:\Documents\PRGM\NEURAL\View Oscillation\model_graphics\gen_model.png',
+    show_shapes=True,
+    show_layer_names=True,
+    rankdir='TB',
+    dpi=64
+)
 
 LAMBDA = 100
 
@@ -186,7 +194,16 @@ def Discriminator():
 
     return tf.keras.Model(inputs=[inp, tar], outputs=last)
 
-#discriminator = Discriminator()
+discriminator = Discriminator()
+
+tf.keras.utils.plot_model(
+    discriminator,
+    to_file=r'E:\Documents\PRGM\NEURAL\View Oscillation\model_graphics\dis_model.png',
+    show_shapes=True,
+    show_layer_names=True,
+    rankdir='TB',
+    dpi=64
+)
 
 def discriminator_loss(disc_real_output, disc_generated_output):
     real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
@@ -276,7 +293,7 @@ def fit(train_ds, epochs, test_ds=None):
         #if (epoch + 1) % 20 == 0:
             #checkpoint.save(file_prefix=checkpoint_prefix)
         demo_images = get_demo_imgs()
-        demo_output = generator([tf.expand_dims(demo_images[0][0],axis=0)],training=True)
+        demo_output = generator([tf.expand_dims(demo_images[0][0],axis=0),tf.expand_dims(np.array(0.0),axis=0)],training=True)
         save_demo(demo_output,epoch,pred=True)
         #s = input('...')
         #generate_images(generator, test_dataset_x, test_dataset_y, epoch_number)
@@ -351,15 +368,9 @@ class DataGenerator(tf.keras.utils.Sequence):
 
 if __name__ == '__main__':
 
-    for degree in range(0,46):
-        print(f'Now Training Model {degree}')
-        d_path = os.path.join(data_path,str(degree))
-        train_ids, val_ids = get_data_ids(d_path)
+    #pass
+    train_ids, val_ids = get_data_ids()
 
-        train_gen = DataGenerator(train_ids, data_path,batch_size=BATCH_SIZE)
+    train_gen = DataGenerator(train_ids, data_path,batch_size=BATCH_SIZE)
 
-        generator = Generator()
-        discriminator = Discriminator()
-
-        fit(train_ds = train_gen, epochs = NUM_EPOCHS)
-        generator.save(os.path.join(model_save_dir,str(degree)+'.h5'))
+    fit(train_ds = train_gen, epochs = NUM_EPOCHS)
