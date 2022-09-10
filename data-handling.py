@@ -6,7 +6,7 @@ data = r'E:\DATA\View Oscillation'
 data2 = r'E:\DATA\View Oscillation 2\NPZ-F'
 target_size = (512,512)
 
-num_unique_scenes = 100
+num_unique_scenes = 300
 
 def get_img(path):
     img = cv2.resize(cv2.imread(path),target_size)
@@ -38,18 +38,16 @@ def to_npz():
 
 
 def to_npz():
-    bar = Bar(' PROCESSING ', max = num_unique_scenes, suffix='%(percent)d%%')
-    example_index = 5
-    init_folders = True
+    bar = Bar(' PROCESSING ', max = num_unique_scenes*46, suffix='%(percent)d%%')
     for d in range(0,46):
-        if init_folders:
-            os.mkdir(os.path.join(data2,str(d)))
-        for n in range(example_index+1,num_unique_scenes):
+        os.mkdir(os.path.join(data2,str(d)))
+        for n in range(6,num_unique_scenes):
             x = get_img(os.path.join(data,str(0),str(n).zfill(4)+'.jpg'))
             y = get_img(os.path.join(data,str(d),str(n).zfill(4)+'.jpg'))
-            np.savez(os.path.join(data2,str(d),str(example_index).zfill(5)+'.npz'),
+            np.savez(os.path.join(data2,str(d),str(n).zfill(5)+'.npz'),
                 x = np.array(x),
                 y = np.array(y))
-        example_index += 1
+        bar.next()
+    bar.finish()
 
 to_npz()

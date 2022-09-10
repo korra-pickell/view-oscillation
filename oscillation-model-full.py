@@ -13,18 +13,19 @@ wkdir = os.path.dirname(os.path.realpath(__file__))
 data = r'E:\DATA\View Oscillation'
 data_path = r'E:\DATA\View Oscillation 2\NPZ-F'
 img_save_dir = r'E:\DATA\View Oscillation 2\Demo'
+model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
-NUM_EPOCHS = 5
-MAX_SAMPLES = 1000
+NUM_EPOCHS = 1
+MAX_SAMPLES = 200
 num_demo_examples = 1
 GEN_FILTER_SIZE = 2
 
-BUFFER_SIZE = 3000
+BUFFER_SIZE = 500
 BATCH_SIZE = 1
-IMG_WIDTH = 256
-IMG_HEIGHT = 256
+IMG_WIDTH = 512
+IMG_HEIGHT = 512
 
 OUTPUT_CHANNELS = 3
 
@@ -95,15 +96,15 @@ def Generator():
     input1 = tf.keras.layers.Input(shape=[IMG_WIDTH, IMG_HEIGHT, OUTPUT_CHANNELS])
 
     down_stack = [
-        downsample(64, GEN_FILTER_SIZE, apply_batchnorm=False),    # (bs, 128, 128, 64)
-        downsample(128, GEN_FILTER_SIZE),    # (bs, 64, 64, 128)
-        downsample(256, GEN_FILTER_SIZE),    # (bs, 32, 32, 256)
-        downsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 512)
-        downsample(512, GEN_FILTER_SIZE),    # (bs, 8, 8, 512)
-        #downsample(512, GEN_FILTER_SIZE),
-        downsample(512, GEN_FILTER_SIZE),    # (bs, 4, 4, 512)
-        downsample(512, GEN_FILTER_SIZE),    # (bs, 2, 2, 512)
-        downsample(512, GEN_FILTER_SIZE),    # (bs, 1, 1, 512)
+        downsample(64, GEN_FILTER_SIZE, apply_batchnorm=False),    # 512 -> 256
+        downsample(128, GEN_FILTER_SIZE),    # 256 -> 128
+        downsample(256, GEN_FILTER_SIZE),    # 128 -> 64
+        downsample(512, GEN_FILTER_SIZE),    # 64 -> 32
+        downsample(512, GEN_FILTER_SIZE),    # 32 -> 16
+        downsample(512, GEN_FILTER_SIZE),    # 16 -> 8
+        downsample(512, GEN_FILTER_SIZE),    # 8 -> 4
+        downsample(512, GEN_FILTER_SIZE),    # 4 -> 2
+        downsample(512, GEN_FILTER_SIZE),    # 2 -> 1
         #downsample(512, 4),    # (bs, 1, 1, 512)
     ]
 
@@ -113,7 +114,7 @@ def Generator():
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 4, 4, 1024)
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 8, 8, 1024)
         upsample(512, GEN_FILTER_SIZE),
-        #upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
+        upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
         upsample(256, GEN_FILTER_SIZE),    # (bs, 32, 32, 512)
         upsample(128, GEN_FILTER_SIZE),    # (bs, 64, 64, 256)
         upsample(64, GEN_FILTER_SIZE),    # (bs, 128, 128, 128)
@@ -145,16 +146,7 @@ def Generator():
 
     return tf.keras.Model(inputs=input1, outputs=x)
 
-generator = Generator()
-
-tf.keras.utils.plot_model(
-    generator,
-    to_file=r'E:\Documents\PRGM\NEURAL\View Oscillation\model_graphics\gen_model.png',
-    show_shapes=True,
-    show_layer_names=True,
-    rankdir='TB',
-    dpi=64
-)
+#generator = Generator()
 
 LAMBDA = 100
 
@@ -194,16 +186,7 @@ def Discriminator():
 
     return tf.keras.Model(inputs=[inp, tar], outputs=last)
 
-discriminator = Discriminator()
-
-tf.keras.utils.plot_model(
-    discriminator,
-    to_file=r'E:\Documents\PRGM\NEURAL\View Oscillation\model_graphics\dis_model.png',
-    show_shapes=True,
-    show_layer_names=True,
-    rankdir='TB',
-    dpi=64
-)
+#discriminator = Discriminator()
 
 def discriminator_loss(disc_real_output, disc_generated_output):
     real_loss = loss_object(tf.ones_like(disc_real_output), disc_real_output)
@@ -283,23 +266,12 @@ def fit(train_ds, epochs, test_ds=None):
         train_bar = Bar('Training ',max = len(train_ds), suffix = '%(percent).1f%% - %(eta)ds')
         for n, (inputs, target) in enumerate(train_ds):
             train_bar.next()
-            #print(input_image.shape,target.shape)
-            #stop = input('.......')
-            train_step(inputs['input_1'], target, epoch)
+            train_step(inputs, target, epoch)
         train_bar.finish()
         print()
-
-        # saving (checkpoint) the model every 20 epochs
-        #if (epoch + 1) % 20 == 0:
-            #checkpoint.save(file_prefix=checkpoint_prefix)
         demo_images = get_demo_imgs()
-        demo_output = generator([tf.expand_dims(demo_images[0][0],axis=0),tf.expand_dims(np.array(0.0),axis=0)],training=True)
+        demo_output = generator([tf.expand_dims(demo_images[0][0],axis=0)],training=True)
         save_demo(demo_output,epoch,pred=True)
-        #s = input('...')
-        #generate_images(generator, test_dataset_x, test_dataset_y, epoch_number)
-
-        #print('SAVING CKPT')
-        #checkpoint.save(file_prefix=checkpoint_prefix)
 
         print ('Time taken for epoch {} is {} sec\n'.format(epoch + 1,time.time()-start))
 
@@ -349,28 +321,42 @@ class DataGenerator(tf.keras.utils.Sequence):
     def __data_generation(self, list_IDs_temp):
         'Generates data containing batch_size samples' # X : (n_samples, *dim, n_channels)
         # Initialization
-        X0 = np.empty((self.batch_size, *self.dim1, self.n_channels))
-        X1 = np.empty((self.batch_size, *self.dim2))
-        y = np.empty((self.batch_size, *self.dim1, self.n_channels))
+        X_arr = np.empty((self.batch_size, *self.dim1, self.n_channels))
+        y_arr = np.empty((self.batch_size, *self.dim1, self.n_channels))
 
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
             data = np.load(os.path.join(self.dpath,ID))
-            x0,x1,y0 = data['x0'],data['x1'],data['y0']
-            x0 = cv2.resize(x0,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
-            y0 = cv2.resize(y0,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
-            X0[i,], X1[i,], y[i,] = x0, x1, y0
+            x,y = data['x'],data['y']
+            x = cv2.resize(x,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
+            y = cv2.resize(y,(TARGET_SHAPE[0],TARGET_SHAPE[1]))
+            #print(x)
+            #print(y)
+            #s = input('...')
+            X_arr[i,], y_arr[i,] = x, y
             #print((x0 == y0).all())
 
-        return {'input_1':X0, 'input_2':X1}, y
+        return X_arr, y_arr
 
 
 if __name__ == '__main__':
 
-    #pass
-    train_ids, val_ids = get_data_ids()
+    for degree in range(0,46):
+        print(f'Now Training Model {degree}')
+        d_path = os.path.join(data_path,str(degree))
+        
+        train_ids, val_ids = get_data_ids(d_path)
 
-    train_gen = DataGenerator(train_ids, data_path,batch_size=BATCH_SIZE)
+        train_gen = DataGenerator(train_ids, d_path,batch_size=BATCH_SIZE)
 
-    fit(train_ds = train_gen, epochs = NUM_EPOCHS)
+        #print(train_gen[0])
+
+        #s=input('...')
+
+        generator = Generator()
+        discriminator = Discriminator()
+
+        fit(train_ds = train_gen, epochs = NUM_EPOCHS)
+        s=input('...')
+        generator.save(os.path.join(model_save_dir,str(degree)+'.h5'))
