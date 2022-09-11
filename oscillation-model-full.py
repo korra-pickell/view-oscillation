@@ -18,7 +18,7 @@ model_save_dir = r'E:\DATA\View Oscillation 2\models'
 checkpoint_dir = ''
 
 NUM_EPOCHS = 1000
-MAX_SAMPLES = 100
+MAX_SAMPLES = 5000
 num_demo_examples = 1
 GEN_FILTER_SIZE = 4
 
@@ -35,6 +35,11 @@ TARGET_SHAPE = (IMG_WIDTH,IMG_HEIGHT,OUTPUT_CHANNELS,)
 
 def get_img(path):
     img = cv2.resize(cv2.imread(path),(TARGET_SHAPE[0],TARGET_SHAPE[1]))
+    if OUTPUT_CHANNELS == 1:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img = tf.expand_dims(img,axis=-1)
+    #print(img.shape)
+    #s = input('...')
     return (np.array(img)/127.5)-1
 
 
@@ -100,8 +105,8 @@ def Generator():
         downsample(128, GEN_FILTER_SIZE),    # 256 -> 128
         downsample(256, GEN_FILTER_SIZE),    # 128 -> 64
         downsample(512, GEN_FILTER_SIZE),    # 64 -> 32
-        #downsample(512, GEN_FILTER_SIZE),    # 32 -> 16
-        downsample(512, GEN_FILTER_SIZE),    # 16 -> 8
+        downsample(512, GEN_FILTER_SIZE),    # 32 -> 16
+        #downsample(512, GEN_FILTER_SIZE),    # 16 -> 8
         downsample(512, GEN_FILTER_SIZE),    # 8 -> 4
         downsample(512, GEN_FILTER_SIZE),    # 4 -> 2
         downsample(512, GEN_FILTER_SIZE),    # 2 -> 1
@@ -113,8 +118,8 @@ def Generator():
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 2, 2, 1024)
         upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 4, 4, 1024)
         #upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 8, 8, 1024)
-        upsample(512, GEN_FILTER_SIZE),
-        #upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
+        #upsample(512, GEN_FILTER_SIZE),
+        upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
         upsample(256, GEN_FILTER_SIZE),    # (bs, 32, 32, 512)
         upsample(128, GEN_FILTER_SIZE),    # (bs, 64, 64, 256)
         upsample(64, GEN_FILTER_SIZE),    # (bs, 128, 128, 128)
@@ -342,8 +347,8 @@ class DataGenerator(tf.keras.utils.Sequence):
             X_arr[i,], y_arr[i,] = x, y
             #print((x0 == y0).all())'''
         for i, ID in enumerate(list_IDs_temp):
-            img_in = self.load_img(os.path.join(self.dpath,'0',ID))
-            img_out = self.load_img(os.path.join(self.dpath,str(self.degree),ID))
+            img_in = get_img(os.path.join(self.dpath,'0',ID))
+            img_out = get_img(os.path.join(self.dpath,str(self.degree),ID))
             X_arr[i,], y_arr[i,] = img_in, img_out
 
         return X_arr, y_arr
@@ -370,14 +375,14 @@ def plotter(model1,model2):
 
 if __name__ == '__main__':
 
-    for degree in range(23,24):
+    for degree in range(0,21):
         print(f'Now Training Model {degree}')
         #d_path = os.path.join(data_path,str(degree))
         
         train_ids, val_ids = get_data_ids(data_path,degree)
         
 
-        train_gen = DataGenerator(train_ids, data_path, batch_size=BATCH_SIZE,d=degree)
+        train_gen = DataGenerator(train_ids, data_path, batch_size=BATCH_SIZE,d=degree,n_channels=OUTPUT_CHANNELS)
 
         #print(train_gen[0])
 

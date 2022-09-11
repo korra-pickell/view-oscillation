@@ -5,7 +5,7 @@ folder = r'E:\DATA\View-Oscillation-5k'
 
 pg.PAUSE = 0.8 
 
-for i in range(23,46):
+for i in range(-9,11):
 
     # Output Menu
     pg.click(1295,505)
@@ -16,7 +16,7 @@ for i in range(23,46):
     pg.moveTo(1800,873,0.5)
     pg.click(1800,873)
     pg.hotkey('delete')
-    pg.write(os.path.join(folder,str(i)+'\\'))
+    pg.write(os.path.join(folder,str(i+10)+'\\'))
 
     # Cam Rotation Property
     pg.click(1295,660)
@@ -27,7 +27,8 @@ for i in range(23,46):
     # Degree Rotation Input
     pg.click(1730,640)
     pg.click(1730,640)
-    pg.hotkey('del')
+    pg.hotkey('delete')
+    pg.hotkey('delete')
     pg.write(str(i))
 
     # Select Render View
@@ -36,8 +37,7 @@ for i in range(23,46):
 
     # Start Render
     pg.hotkey('ctrl','f12',interval=0.25)
-    s=input('..')
-    time.sleep(85)
+    time.sleep(375)
     
     # Close Render Window
     pg.moveTo(1400,225,0.2)
