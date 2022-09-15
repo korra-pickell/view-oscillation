@@ -17,8 +17,8 @@ model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
-NUM_EPOCHS = 1000
-MAX_SAMPLES = 5000
+NUM_EPOCHS = 1
+MAX_SAMPLES = 1000
 num_demo_examples = 1
 GEN_FILTER_SIZE = 4
 
@@ -347,7 +347,7 @@ class DataGenerator(tf.keras.utils.Sequence):
             X_arr[i,], y_arr[i,] = x, y
             #print((x0 == y0).all())'''
         for i, ID in enumerate(list_IDs_temp):
-            img_in = get_img(os.path.join(self.dpath,'0',ID))
+            img_in = get_img(os.path.join(self.dpath,'10',ID))
             img_out = get_img(os.path.join(self.dpath,str(self.degree),ID))
             X_arr[i,], y_arr[i,] = img_in, img_out
 
@@ -373,9 +373,49 @@ def plotter(model1,model2):
     )
 
 
+def initialize_base_models(degree,deg_start):
+    if degree == deg_start:
+        print('Initialize Base Models')
+        generator = Generator()
+        discriminator = Discriminator()
+
+        generator.save_weights(os.path.join(model_save_dir,'Base','base_gen.h5'))
+        discriminator.save_weights(os.path.join(model_save_dir,'Base','base_dis.h5'))
+        return generator, discriminator
+    else:
+        try:
+            print('Load Base Models')
+            generator = Generator()
+            discriminator = Discriminator()
+
+            generator.load_weights(os.path.join(model_save_dir,'Base','base_gen.h5'))
+            discriminator.load_weights(os.path.join(model_save_dir,'Base','base_dis.h5'))
+            return generator, discriminator
+        except:
+            print('No Model To Load')
+
+def reset_weights(model):
+    for layer in model.layers: 
+        if isinstance(layer, tf.keras.Model):
+            reset_weights(layer)
+            continue
+    for k, initializer in layer.__dict__.items():
+        if "initializer" not in k:
+            continue
+      # find the corresponding variable
+        var = getattr(layer, k.replace("_initializer", ""))
+        var.assign(initializer(var.shape, var.dtype))
+
+
+
 if __name__ == '__main__':
 
-    for degree in range(0,21):
+    deg_start, deg_end = 1,10
+
+    generator = Generator()
+    discriminator = Discriminator()
+
+    for degree in range(deg_start,deg_end):
         print(f'Now Training Model {degree}')
         #d_path = os.path.join(data_path,str(degree))
         
@@ -388,11 +428,18 @@ if __name__ == '__main__':
 
         #s=input('...')
 
-        generator = Generator()
-        discriminator = Discriminator()
+        #generator, discriminator = initialize_base_models(degree,deg_start)
+
+
+        
+
+        if degree != deg_start:
+            reset_weights(generator)
+            reset_weights(discriminator)
 
         plotter(generator,discriminator)
 
         fit(train_ds = train_gen, epochs = NUM_EPOCHS)
         #s=input('...')
-        #generator.save(os.path.join(model_save_dir,str(degree)+'.h5'))
+        generator.save_weights(os.path.join(model_save_dir,str(degree)+'.h5'))
+        #s=input('...')
