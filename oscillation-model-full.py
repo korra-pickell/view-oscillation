@@ -17,8 +17,8 @@ model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
-NUM_EPOCHS = 1
-MAX_SAMPLES = 1000
+NUM_EPOCHS = 10
+MAX_SAMPLES = 5000
 num_demo_examples = 1
 GEN_FILTER_SIZE = 4
 
@@ -104,22 +104,22 @@ def Generator():
         downsample(64, GEN_FILTER_SIZE, apply_batchnorm=False),    # 512 -> 256
         downsample(128, GEN_FILTER_SIZE),    # 256 -> 128
         downsample(256, GEN_FILTER_SIZE),    # 128 -> 64
-        downsample(512, GEN_FILTER_SIZE),    # 64 -> 32
+        downsample(256, GEN_FILTER_SIZE),    # 64 -> 32
         downsample(512, GEN_FILTER_SIZE),    # 32 -> 16
         #downsample(512, GEN_FILTER_SIZE),    # 16 -> 8
-        downsample(512, GEN_FILTER_SIZE),    # 8 -> 4
-        downsample(512, GEN_FILTER_SIZE),    # 4 -> 2
-        downsample(512, GEN_FILTER_SIZE),    # 2 -> 1
+        downsample(256, GEN_FILTER_SIZE),    # 8 -> 4
+        downsample(256, GEN_FILTER_SIZE),    # 4 -> 2
+        downsample(256, GEN_FILTER_SIZE),    # 2 -> 1
         #downsample(512, 4),    # (bs, 1, 1, 512)
     ]
 
     up_stack = [
-        upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 2, 2, 1024)
-        upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 2, 2, 1024)
-        upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 4, 4, 1024)
+        upsample(256, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 2, 2, 1024)
+        upsample(256, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 2, 2, 1024)
+        upsample(256, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 4, 4, 1024)
         #upsample(512, GEN_FILTER_SIZE, apply_dropout=True),    # (bs, 8, 8, 1024)
         #upsample(512, GEN_FILTER_SIZE),
-        upsample(512, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
+        upsample(256, GEN_FILTER_SIZE),    # (bs, 16, 16, 1024)
         upsample(256, GEN_FILTER_SIZE),    # (bs, 32, 32, 512)
         upsample(128, GEN_FILTER_SIZE),    # (bs, 64, 64, 256)
         upsample(64, GEN_FILTER_SIZE),    # (bs, 128, 128, 128)
@@ -410,7 +410,7 @@ def reset_weights(model):
 
 if __name__ == '__main__':
 
-    deg_start, deg_end = 1,10
+    deg_start, deg_end = 0,10
 
     generator = Generator()
     discriminator = Discriminator()
