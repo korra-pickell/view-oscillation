@@ -1,4 +1,5 @@
 import os, time, cv2, datetime
+from tabnanny import verbose
 
 import numpy as np
 import tensorflow as tf
@@ -17,8 +18,8 @@ model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
-NUM_EPOCHS = 10
-MAX_SAMPLES = 5000
+NUM_EPOCHS = 1
+MAX_SAMPLES = 100
 num_demo_examples = 1
 GEN_FILTER_SIZE = 4
 
@@ -105,7 +106,7 @@ def Generator():
         downsample(128, GEN_FILTER_SIZE),    # 256 -> 128
         downsample(256, GEN_FILTER_SIZE),    # 128 -> 64
         downsample(256, GEN_FILTER_SIZE),    # 64 -> 32
-        downsample(512, GEN_FILTER_SIZE),    # 32 -> 16
+        downsample(256, GEN_FILTER_SIZE),    # 32 -> 16
         #downsample(512, GEN_FILTER_SIZE),    # 16 -> 8
         downsample(256, GEN_FILTER_SIZE),    # 8 -> 4
         downsample(256, GEN_FILTER_SIZE),    # 4 -> 2
@@ -410,7 +411,7 @@ def reset_weights(model):
 
 if __name__ == '__main__':
 
-    deg_start, deg_end = 0,10
+    deg_start, deg_end = 0,1
 
     generator = Generator()
     discriminator = Discriminator()
@@ -441,5 +442,6 @@ if __name__ == '__main__':
 
         fit(train_ds = train_gen, epochs = NUM_EPOCHS)
         #s=input('...')
-        generator.save_weights(os.path.join(model_save_dir,str(degree)+'.h5'))
+        generator.save(os.path.join(model_save_dir,'0.h5'))
+        s= input('...')
         #s=input('...')
