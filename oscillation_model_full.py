@@ -18,7 +18,7 @@ model_save_dir = r'E:\DATA\View Oscillation 2\models'
 
 checkpoint_dir = ''
 
-NUM_EPOCHS = 1
+NUM_EPOCHS = 3
 MAX_SAMPLES = 100
 num_demo_examples = 1
 GEN_FILTER_SIZE = 4
@@ -411,12 +411,13 @@ def reset_weights(model):
 
 if __name__ == '__main__':
 
-    deg_start, deg_end = 0,1
+    angles = [x for x in range(0,21)]
+    angles.remove(10)
 
     generator = Generator()
     discriminator = Discriminator()
 
-    for degree in range(deg_start,deg_end):
+    for degree in angles:
         print(f'Now Training Model {degree}')
         #d_path = os.path.join(data_path,str(degree))
         
@@ -424,17 +425,9 @@ if __name__ == '__main__':
         
 
         train_gen = DataGenerator(train_ids, data_path, batch_size=BATCH_SIZE,d=degree,n_channels=OUTPUT_CHANNELS)
-
-        #print(train_gen[0])
-
-        #s=input('...')
-
-        #generator, discriminator = initialize_base_models(degree,deg_start)
-
-
         
 
-        if degree != deg_start:
+        if degree != 0:
             reset_weights(generator)
             reset_weights(discriminator)
 
@@ -442,6 +435,5 @@ if __name__ == '__main__':
 
         fit(train_ds = train_gen, epochs = NUM_EPOCHS)
         #s=input('...')
-        generator.save(os.path.join(model_save_dir,'0.h5'))
-        s= input('...')
+        generator.save(os.path.join(model_save_dir,str(degree)+'.h5'))
         #s=input('...')

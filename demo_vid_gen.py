@@ -26,15 +26,17 @@ def render_angle(img,d):
 
 if __name__ == '__main__':
     
-    angles = [x for x in range(0,1)]
-    #angles.remove(10)
     
     input_img = tf.expand_dims(get_img(demo_img),axis=0)
 
-    for d in angles:
+    for d in range(0,21):
 
-        gen = tf.keras.models.load_model(os.path.join(model_dir,str(d)+'.h5'))
+        if d != 10:
 
-        gen_output = gen(input_img,training=True)
+            gen = tf.keras.models.load_model(os.path.join(model_dir,str(d)+'.h5'))
 
-        save_demo(gen_output,d,pred=True)
+            gen_output = gen(input_img,training=True)
+
+            save_demo(gen_output,d,pred=True)
+        else:
+            save_demo(input_img,10,pred=True)
